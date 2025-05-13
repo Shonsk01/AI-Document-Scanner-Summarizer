@@ -19,7 +19,7 @@ except LookupError:
 reader = easyocr.Reader(['en'])
 
 # Streamlit UI
-st.title("📄 Textify. by Shon SUdhir Kamble")
+st.title("📄 Textify -By Shon Sudhir Kamble")
 
 # File uploader
 uploaded_file = st.file_uploader("Upload Image or PDF", type=["png", "jpg", "jpeg", "pdf"])
@@ -39,14 +39,6 @@ def extract_text_from_pdf(pdf_file):
         text += page.get_text()
     return text
 
-# Simulate progress bar
-def simulate_progress(task_desc="Processing..."):
-    progress = st.progress(0, text=task_desc)
-    for percent_complete in range(1, 101, 10):
-        time.sleep(0.1)
-        progress.progress(percent_complete, text=task_desc)
-    progress.empty()  # Remove progress bar when done
-
 # Processing logic
 if uploaded_file:
     file_name = uploaded_file.name.lower()
@@ -54,9 +46,13 @@ if uploaded_file:
 
     if file_name.endswith(".pdf"):
         st.write("Processing PDF...")
-        simulate_progress("Extracting text from PDF...")  # Progress bar
+        progress_bar = st.progress(0, text="Extracting text from PDF...")
         with st.spinner("Extracting text from PDF..."):
+            for percent_complete in range(1, 101, 20):
+                time.sleep(0.1)
+                progress_bar.progress(percent_complete, text="Extracting text from PDF...")
             text = extract_text_from_pdf(uploaded_file)
+        progress_bar.empty()
         st.success("✅ Text extracted from PDF.")
     else:
         st.write("Processing Image...")
@@ -69,10 +65,14 @@ if uploaded_file:
             image.save(image_bytes, format='PNG')
             image_bytes = image_bytes.getvalue()
 
-            simulate_progress("Extracting text from Image...")  # Progress bar
+            progress_bar = st.progress(0, text="Extracting text from Image...")
             with st.spinner("Extracting text from Image..."):
+                for percent_complete in range(1, 101, 20):
+                    time.sleep(0.1)
+                    progress_bar.progress(percent_complete, text="Extracting text from Image...")
                 result = reader.readtext(image_bytes, detail=0, paragraph=True)
                 text = "\n".join(result)
+            progress_bar.empty()
             st.success("✅ Text extracted from Image.")
         except Exception as e:
             st.error(f"Error while processing image: {e}")
@@ -84,9 +84,13 @@ if uploaded_file:
         st.text_area("", text, height=300)
 
         if st.button("📋 Fast Summarize"):
-            simulate_progress("Summarizing text...")  # Progress bar
+            progress_bar = st.progress(0, text="Summarizing text...")
             with st.spinner("Generating summary using extractive method..."):
+                for percent_complete in range(1, 101, 20):
+                    time.sleep(0.1)
+                    progress_bar.progress(percent_complete, text="Summarizing text...")
                 summary_text = extractive_summary(text, num_sentences=10)
+            progress_bar.empty()
             st.success("✅ Summary Ready!")
             st.subheader("Summary")
             st.text_area("", summary_text, height=300)
