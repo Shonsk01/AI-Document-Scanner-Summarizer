@@ -1,18 +1,13 @@
-# Ignore Python venv
+# Python virtual environment
 venv/
 __pycache__/
 *.pyc
 
-# Ignore OS junk files
+# Mac system files
 .DS_Store
 
-# Ignore any large data or model files
+# Large data or model files (optional)
 *.dylib
-*.pth
 *.pt
+*.pth
 *.onnx
-*.pdf
-*.jpg
-*.jpeg
-*.png
-
