@@ -6,6 +6,10 @@ import PyPDF2
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
+import nltk
+
+# Download the necessary NLTK data (punkt tokenizer)
+nltk.download('punkt')
 
 # Sumy extractive summarizer function
 def extractive_summary(text, num_sentences=10):
