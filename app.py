@@ -6,6 +6,7 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.summarizers.lex_rank import LexRankSummarizer
 from sumy.nlp.tokenizers import Tokenizer
 import nltk
+import io
 
 # Ensure NLTK resources are present
 try:
@@ -53,9 +54,16 @@ if uploaded_file:
     else:
         image = Image.open(uploaded_file)
         st.image(image, caption='Uploaded Image', use_container_width=True)
+        
+        # Convert the image to bytes before passing to EasyOCR
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format='PNG')
+        image_bytes = image_bytes.getvalue()
+
         with st.spinner("Extracting text from Image..."):
-            result = reader.readtext(uploaded_file, detail=0, paragraph=True)
+            result = reader.readtext(image_bytes, detail=0, paragraph=True)
             text = "\n".join(result)
+        
         st.success("✅ Text extracted from Image.")
 
     # Display extracted text in scrollable area
@@ -71,4 +79,3 @@ if uploaded_file:
             st.text_area("", summary_text, height=300)
     else:
         st.warning("⚠ No text found to process.")
-
