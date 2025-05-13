@@ -77,9 +77,8 @@ transformers==4.51.3
 typing_extensions==4.13.2
 tzdata==2025.2
 urllib3==2.4.0
-easyocr
-PyMuPDF
-streamlit
-Pillow
-sumy
-nltk
+easyocr==1.4.1
+PyMuPDF==1.18.19
+Pillow==11.2.1
+sumy==0.11.0
+nltk==3.9.1
