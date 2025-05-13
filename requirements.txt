@@ -1,0 +1,6 @@
+streamlit
+pytesseract
+Pillow
+pdfplumber
+sumy
+nltk
