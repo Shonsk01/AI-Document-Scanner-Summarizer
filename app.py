@@ -7,6 +7,7 @@ from sumy.summarizers.lex_rank import LexRankSummarizer
 from sumy.nlp.tokenizers import Tokenizer
 import nltk
 import io
+import time
 
 # Ensure NLTK resources are present
 try:
@@ -17,7 +18,11 @@ except LookupError:
 # Initialize OCR reader
 reader = easyocr.Reader(['en'])
 
-st.title("📄 Textify Image & PDF Extractor + Summarizer by Shon Sudhir Kamble")
+# Streamlit UI
+st.title("📄 Textify. by Shon SUdhir Kamble")
+
+# File uploader
+uploaded_file = st.file_uploader("Upload Image or PDF", type=["png", "jpg", "jpeg", "pdf"])
 
 # Extractive summarization using LexRank
 def extractive_summary(text, num_sentences=10):
@@ -34,55 +39,56 @@ def extract_text_from_pdf(pdf_file):
         text += page.get_text()
     return text
 
-# Tabs for PDF and Image
-tab1, tab2 = st.tabs(["📄 Upload PDF", "🖼️ Upload Image from Files Only"])
+# Simulate progress bar
+def simulate_progress(task_desc="Processing..."):
+    progress = st.progress(0, text=task_desc)
+    for percent_complete in range(1, 101, 10):
+        time.sleep(0.1)
+        progress.progress(percent_complete, text=task_desc)
+    progress.empty()  # Remove progress bar when done
 
-with tab1:
-    uploaded_pdf = st.file_uploader("Upload PDF File", type=["pdf"], key="pdf_uploader")
-    if uploaded_pdf:
+# Processing logic
+if uploaded_file:
+    file_name = uploaded_file.name.lower()
+    st.write(f"File uploaded: {file_name}")
+
+    if file_name.endswith(".pdf"):
+        st.write("Processing PDF...")
+        simulate_progress("Extracting text from PDF...")  # Progress bar
         with st.spinner("Extracting text from PDF..."):
-            text = extract_text_from_pdf(uploaded_pdf)
+            text = extract_text_from_pdf(uploaded_file)
         st.success("✅ Text extracted from PDF.")
+    else:
+        st.write("Processing Image...")
+        try:
+            image = Image.open(uploaded_file)
+            st.image(image, caption='Uploaded Image', use_container_width=True)
+            
+            # Convert the image to bytes before passing to EasyOCR
+            image_bytes = io.BytesIO()
+            image.save(image_bytes, format='PNG')
+            image_bytes = image_bytes.getvalue()
 
-        if text.strip():
-            st.subheader("📜 Extracted Text")
-            st.text_area("", text, height=300)
+            simulate_progress("Extracting text from Image...")  # Progress bar
+            with st.spinner("Extracting text from Image..."):
+                result = reader.readtext(image_bytes, detail=0, paragraph=True)
+                text = "\n".join(result)
+            st.success("✅ Text extracted from Image.")
+        except Exception as e:
+            st.error(f"Error while processing image: {e}")
+            st.write(e)
 
-            if st.button("📋 Fast Summarize (PDF)", key="summarize_pdf"):
-                with st.spinner("Generating summary using extractive method..."):
-                    summary_text = extractive_summary(text, num_sentences=10)
-                st.success("✅ Summary Ready!")
-                st.subheader("Summary")
-                st.text_area("", summary_text, height=300)
-        else:
-            st.warning("⚠ No text found in PDF.")
+    # Display extracted text in scrollable area
+    if text.strip():
+        st.subheader("📜 Extracted Text")
+        st.text_area("", text, height=300)
 
-with tab2:
-    uploaded_image = st.file_uploader("Upload Image from Files Only", type=["png", "jpg", "jpeg"], key="image_uploader")
-    if uploaded_image:
-        image = Image.open(uploaded_image)
-        st.image(image, caption='Uploaded Image', use_container_width=True)
-
-        # Convert the image to bytes before passing to EasyOCR
-        image_bytes = io.BytesIO()
-        image.save(image_bytes, format='PNG')
-        image_bytes = image_bytes.getvalue()
-
-        with st.spinner("Extracting text from Image..."):
-            result = reader.readtext(image_bytes, detail=0, paragraph=True)
-            text = "\n".join(result)
-        
-        st.success("✅ Text extracted from Image.")
-
-        if text.strip():
-            st.subheader("📜 Extracted Text")
-            st.text_area("", text, height=300)
-
-            if st.button("📋 Fast Summarize (Image)", key="summarize_image"):
-                with st.spinner("Generating summary using extractive method..."):
-                    summary_text = extractive_summary(text, num_sentences=10)
-                st.success("✅ Summary Ready!")
-                st.subheader("Summary")
-                st.text_area("", summary_text, height=300)
-        else:
-            st.warning("⚠ No text found in image.")
+        if st.button("📋 Fast Summarize"):
+            simulate_progress("Summarizing text...")  # Progress bar
+            with st.spinner("Generating summary using extractive method..."):
+                summary_text = extractive_summary(text, num_sentences=10)
+            st.success("✅ Summary Ready!")
+            st.subheader("Summary")
+            st.text_area("", summary_text, height=300)
+    else:
+        st.warning("⚠ No text found to process.")
