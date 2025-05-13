@@ -6,25 +6,25 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.summarizers.lex_rank import LexRankSummarizer
 from sumy.nlp.tokenizers import Tokenizer
 import nltk
-import os
 import io
+import os
 import time
 
-# ---- NLTK safe setup ----
-nltk_data_dir = os.path.join(os.getcwd(), 'nltk_data')
-os.makedirs(nltk_data_dir, exist_ok=True)
+# ---- Safe NLTK setup for Streamlit Cloud ----
+nltk_data_dir = os.path.join(os.getcwd(), "nltk_data")
 nltk.data.path.append(nltk_data_dir)
+os.makedirs(nltk_data_dir, exist_ok=True)
 
 try:
-    nltk.data.find('tokenizers/punkt')
+    nltk.data.find("tokenizers/punkt")
 except LookupError:
-    nltk.download('punkt', download_dir=nltk_data_dir)
+    nltk.download("punkt", download_dir=nltk_data_dir)
 
 # ---- Initialize OCR reader ----
 reader = easyocr.Reader(['en'])
 
-# ---- Streamlit UI ----
-st.title("📄 AI Document Scanner & Summarizer (Image & PDF) by Shon Sudhir Kamble")
+# ---- UI ----
+st.title("📄 AI Document Scanner & Summarizer (Image & PDF) by Shon")
 
 uploaded_file = st.file_uploader("Upload Image or PDF", type=["png", "jpg", "jpeg", "pdf"])
 
@@ -47,32 +47,28 @@ if uploaded_file:
     file_name = uploaded_file.name.lower()
     st.write(f"📂 File uploaded: `{file_name}`")
 
-    # Progress bar for extraction
     progress_bar = st.progress(0)
 
     if file_name.endswith(".pdf"):
-        st.write("🔍 Processing PDF...")
         with st.spinner("Extracting text from PDF..."):
             progress_bar.progress(30)
             text = extract_text_from_pdf(uploaded_file)
-            time.sleep(1)  # Simulate progress
+            time.sleep(0.5)
             progress_bar.progress(100)
         st.success("✅ Text extracted from PDF.")
     else:
-        st.write("🖼 Processing Image...")
         try:
             image = Image.open(uploaded_file)
             st.image(image, caption='Uploaded Image', use_container_width=True)
             progress_bar.progress(30)
 
-            # Convert image to bytes for EasyOCR
             image_bytes = io.BytesIO()
             image.save(image_bytes, format='PNG')
             image_bytes = image_bytes.getvalue()
 
             with st.spinner("Extracting text from Image..."):
                 result = reader.readtext(image_bytes, detail=0, paragraph=True)
-                time.sleep(1)  # Simulate progress
+                time.sleep(0.5)
                 progress_bar.progress(100)
                 text = "\n".join(result)
             st.success("✅ Text extracted from Image.")
@@ -90,7 +86,7 @@ if uploaded_file:
             with st.spinner("Generating summary..."):
                 progress_bar2.progress(30)
                 summary_text = extractive_summary(text, num_sentences=10)
-                time.sleep(1)  # Simulate progress
+                time.sleep(0.5)
                 progress_bar2.progress(100)
             st.success("✅ Summary Ready!")
             st.subheader("Summary")
