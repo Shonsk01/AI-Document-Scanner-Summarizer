@@ -23,7 +23,7 @@ except LookupError:
 reader = easyocr.Reader(['en'])
 
 # Streamlit UI
-st.title("📄 AI Document Scanner & Summarizer (Image & PDF) by Shon")
+st.title("📄 Textify -by Shon Sudhir Kamble")
 
 # File uploader
 uploaded_file = st.file_uploader("Upload Image or PDF", type=["png", "jpg", "jpeg", "pdf"])
