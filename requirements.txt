@@ -83,3 +83,12 @@ streamlit
 Pillow
 sumy
 nltk
+streamlit==1.35.0
+Pillow==10.3.0
+easyocr==1.7.1
+PyMuPDF==1.24.1
+sumy==0.11.0
+nltk==3.8.1
+torch==2.2.2
+opencv-python-headless==4.9.0.80
+numpy==1.26.4
