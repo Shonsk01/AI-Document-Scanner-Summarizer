@@ -1,0 +1,18 @@
+# Ignore Python venv
+venv/
+__pycache__/
+*.pyc
+
+# Ignore OS junk files
+.DS_Store
+
+# Ignore any large data or model files
+*.dylib
+*.pth
+*.pt
+*.onnx
+*.pdf
+*.jpg
+*.jpeg
+*.png
+
