@@ -3,93 +3,92 @@ from PIL import Image
 import easyocr
 import fitz  # PyMuPDF
 from sumy.parsers.plaintext import PlaintextParser
-from sumy.summarizers.lex_rank import LexRankSummarizer
 from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lsa import LsaSummarizer
 import nltk
 import io
-import os
 import time
 
-# ---- Safe NLTK setup for Streamlit Cloud ----
-nltk_data_dir = os.path.join(os.getcwd(), "nltk_data")
-nltk.data.path.append(nltk_data_dir)
-os.makedirs(nltk_data_dir, exist_ok=True)
-
+# Check and download NLTK punkt safely
 try:
-    nltk.data.find("tokenizers/punkt")
+    nltk.data.find('tokenizers/punkt')
 except LookupError:
-    nltk.download("punkt", download_dir=nltk_data_dir)
+    nltk.download('punkt')
 
-# ---- Initialize OCR reader ----
+# Set page config
+st.set_page_config(page_title="Textify AI - Document OCR & Summarizer", page_icon="📄", layout="centered")
+
+st.title("📄 Textify AI - Document Extractor & Summarizer")
+
+# OCR Reader Initialization
 reader = easyocr.Reader(['en'])
 
-# ---- UI ----
-st.title("📄 AI Document Scanner & Summarizer (Image & PDF) by Shon")
-
-uploaded_file = st.file_uploader("Upload Image or PDF", type=["png", "jpg", "jpeg", "pdf"])
-
-# ---- Functions ----
-def extractive_summary(text, num_sentences=10):
+# Extractive summarization function using Sumy
+def extractive_summary(text, num_sentences=5):
     parser = PlaintextParser.from_string(text, Tokenizer("english"))
-    summarizer = LexRankSummarizer()
+    summarizer = LsaSummarizer()
     summary = summarizer(parser.document, num_sentences)
-    return "\n".join([f"• {sentence}" for sentence in summary])
+    return " ".join(str(sentence) for sentence in summary)
 
-def extract_text_from_pdf(pdf_file):
-    pdf_reader = fitz.open(stream=pdf_file.read(), filetype="pdf")
+# OCR extraction from image
+def ocr_image(img):
+    st.info("Performing OCR on Image...")
+    result = reader.readtext(img)
+    extracted_text = "\n".join([text for _, text, _ in result])
+    return extracted_text
+
+# OCR extraction from PDF
+def ocr_pdf(pdf_file):
+    st.info("Extracting text from PDF...")
+    pdf_doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
     text = ""
-    for page in pdf_reader:
+    for page in pdf_doc:
         text += page.get_text()
     return text
 
-# ---- Processing ----
+# File upload
+uploaded_file = st.file_uploader("Upload a PDF or Image file", type=["pdf", "png", "jpg", "jpeg"])
+
+# Custom CSS for progress bar below button
+st.markdown("""
+    <style>
+    .stProgress > div > div > div > div {
+        background-color: #4CAF50;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Button and processing
 if uploaded_file:
-    file_name = uploaded_file.name.lower()
-    st.write(f"📂 File uploaded: `{file_name}`")
+    if st.button("🧾 Extract & Summarize"):
+        progress_bar = st.progress(0)
+        time.sleep(0.5)
+        progress_bar.progress(10)
 
-    progress_bar = st.progress(0)
-
-    if file_name.endswith(".pdf"):
-        with st.spinner("Extracting text from PDF..."):
-            progress_bar.progress(30)
-            text = extract_text_from_pdf(uploaded_file)
-            time.sleep(0.5)
-            progress_bar.progress(100)
-        st.success("✅ Text extracted from PDF.")
-    else:
-        try:
+        # Read file
+        if uploaded_file.type == "application/pdf":
+            text = ocr_pdf(uploaded_file)
+        else:
             image = Image.open(uploaded_file)
-            st.image(image, caption='Uploaded Image', use_container_width=True)
-            progress_bar.progress(30)
+            img_bytes = io.BytesIO()
+            image.save(img_bytes, format='PNG')
+            img_bytes.seek(0)
+            text = ocr_image(img_bytes)
 
-            image_bytes = io.BytesIO()
-            image.save(image_bytes, format='PNG')
-            image_bytes = image_bytes.getvalue()
+        progress_bar.progress(50)
 
-            with st.spinner("Extracting text from Image..."):
-                result = reader.readtext(image_bytes, detail=0, paragraph=True)
-                time.sleep(0.5)
-                progress_bar.progress(100)
-                text = "\n".join(result)
-            st.success("✅ Text extracted from Image.")
-        except Exception as e:
-            st.error(f"❌ Error while processing image: {e}")
-            st.write(e)
-
-    # ---- Show Extracted text ----
-    if text.strip():
-        st.subheader("📜 Extracted Text")
-        st.text_area("", text, height=300)
-
-        if st.button("📋 Fast Summarize"):
-            progress_bar2 = st.progress(0)
-            with st.spinner("Generating summary..."):
-                progress_bar2.progress(30)
-                summary_text = extractive_summary(text, num_sentences=10)
-                time.sleep(0.5)
-                progress_bar2.progress(100)
+        # Summarization
+        if text.strip():
+            summary_text = extractive_summary(text, num_sentences=10)
+            progress_bar.progress(100)
             st.success("✅ Summary Ready!")
-            st.subheader("Summary")
-            st.text_area("", summary_text, height=300)
+            st.subheader("📃 Extracted Text")
+            st.write(text)
+
+            st.subheader("🔍 Extractive Summary")
+            st.write(summary_text)
+        else:
+            st.error("❌ Could not extract any text.")
+            progress_bar.progress(0)
     else:
-        st.warning("⚠ No text found to process.")
+        st.info("Click the button to start OCR and Summarization.")
