@@ -14,19 +14,20 @@ try:
 except LookupError:
     nltk.download('punkt')
 
+try:
+    nltk.data.find('tokenizers/punkt_tab')
+except LookupError:
+    nltk.download('punkt_tab')
+
 # Initialize OCR reader
 reader = easyocr.Reader(['en'])
 
-# ------------------- UI -------------------
-st.set_page_config(page_title="Textify AI", page_icon="📄", layout="wide")
-st.title("📄 Textify - by Shon Sudhir Kamble")
-st.markdown("### Extract text & summarize from PDFs or Images using AI 🧠")
+# Streamlit UI
+st.title("📄 Textify -by Shon Sudhir Kamble")
 
-# Upload section
-st.markdown("---")
-uploaded_file = st.file_uploader("📤 Upload an **Image** or **PDF** file", type=["png", "jpg", "jpeg", "pdf"])
+# File uploader
+uploaded_file = st.file_uploader("Upload Image or PDF", type=["png", "jpg", "jpeg", "pdf"])
 
-# ------------------- Functions -------------------
 # Extractive summarization using LexRank
 def extractive_summary(text, num_sentences=10):
     parser = PlaintextParser.from_string(text, Tokenizer("english"))
@@ -42,50 +43,45 @@ def extract_text_from_pdf(pdf_file):
         text += page.get_text()
     return text
 
-# ------------------- Processing -------------------
+# Processing logic
 if uploaded_file:
     file_name = uploaded_file.name.lower()
-    st.info(f"📁 **File Uploaded:** {file_name}")
+    st.write(f"File uploaded: {file_name}")  # Debugging output
 
-    # PDF Handling
     if file_name.endswith(".pdf"):
-        st.markdown("### 📑 PDF Processing")
-        with st.spinner("🔍 Extracting text from PDF..."):
+        st.write("Processing PDF...")  # Debugging output
+        with st.spinner("Extracting text from PDF..."):
             text = extract_text_from_pdf(uploaded_file)
         st.success("✅ Text extracted from PDF.")
-
-    # Image Handling
     else:
-        st.markdown("### 🖼️ Image Processing")
+        st.write("Processing Image...")  # Debugging output
         try:
             image = Image.open(uploaded_file)
-            with st.container():
-                st.image(image, caption='Uploaded Image', use_container_width=True, channels="RGB")
-
-            # Convert image to bytes
+            st.image(image, caption='Uploaded Image', use_container_width=True)
+            
+            # Convert the image to bytes before passing to EasyOCR
             image_bytes = io.BytesIO()
             image.save(image_bytes, format='PNG')
             image_bytes = image_bytes.getvalue()
 
-            with st.spinner("🔍 Extracting text from Image..."):
+            with st.spinner("Extracting text from Image..."):
                 result = reader.readtext(image_bytes, detail=0, paragraph=True)
                 text = "\n".join(result)
             st.success("✅ Text extracted from Image.")
         except Exception as e:
-            st.error(f"❌ Error while processing image: {e}")
-            st.write(e)
+            st.error(f"Error while processing image: {e}")
+            st.write(e)  # Print the error to the screen for debugging
 
-    # ------------------- Display Extracted Text -------------------
+    # Display extracted text in scrollable area
     if text.strip():
-        st.markdown("### 📜 Extracted Text")
-        st.text_area("Extracted Text", text, height=300)
+        st.subheader("📜 Extracted Text")
+        st.text_area("", text, height=300)
 
-        # Summarization button
         if st.button("📋 Fast Summarize"):
-            with st.spinner("💡 Generating summary..."):
+            with st.spinner("Generating summary using extractive method..."):
                 summary_text = extractive_summary(text, num_sentences=10)
             st.success("✅ Summary Ready!")
-            st.markdown("### 📝 Summary")
-            st.text_area("Summary", summary_text, height=300)
+            st.subheader("Summary")
+            st.text_area("", summary_text, height=300)
     else:
         st.warning("⚠ No text found to process.")
