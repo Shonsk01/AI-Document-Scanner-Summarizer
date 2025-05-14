@@ -8,17 +8,23 @@ from sumy.nlp.tokenizers import Tokenizer
 import nltk
 import io
 
-# Safe download of NLTK resources
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt', download_dir='/tmp/nltk_data')
-    nltk.data.path.append('/tmp/nltk_data')
+# ---- FIX FOR NLTK TOKENIZER (STREAMLIT CLOUD COMPATIBLE) ----
+import os
 
-# Initialize OCR reader
+# Add /tmp/nltk_data to path always (safe for Streamlit Cloud)
+NLTK_DATA_PATH = "/tmp/nltk_data"
+nltk.data.path.append(NLTK_DATA_PATH)
+
+# Ensure punkt is available
+try:
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt", download_dir=NLTK_DATA_PATH)
+
+# ---- INIT EASYOCR ----
 reader = easyocr.Reader(['en'])
 
-# Streamlit UI Styling
+# ---- STREAMLIT STYLING ----
 st.set_page_config(page_title="Textify - AI Document Extractor & Summarizer", layout="wide")
 st.markdown(
     """
@@ -34,23 +40,22 @@ st.markdown(
     </style>
     """, unsafe_allow_html=True)
 
-# Title and introduction
-st.markdown('<h1 class="title">📄 Textify - by Shon S</h1>', unsafe_allow_html=True)
+# ---- HEADER ----
+st.markdown('<h1 class="title">📄 Textify - by Shon Sudhir Kamble</h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">AI-powered Document Extractor & Summarizer</p>', unsafe_allow_html=True)
 
-# File uploader
+# ---- FILE UPLOAD ----
 st.markdown('<div class="upload-section">', unsafe_allow_html=True)
 uploaded_file = st.file_uploader("Upload Image or PDF", type=["png", "jpg", "jpeg", "pdf"])
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Extractive summarization using LexRank
+# ---- TEXT EXTRACTION FUNCTIONS ----
 def extractive_summary(text, num_sentences=10):
     parser = PlaintextParser.from_string(text, Tokenizer("english"))
     summarizer = LexRankSummarizer()
     summary = summarizer(parser.document, num_sentences)
     return "\n".join([f"• {sentence}" for sentence in summary])
 
-# PDF text extraction using PyMuPDF
 def extract_text_from_pdf(pdf_file):
     pdf_reader = fitz.open(stream=pdf_file.read(), filetype="pdf")
     text = ""
@@ -58,23 +63,22 @@ def extract_text_from_pdf(pdf_file):
         text += page.get_text()
     return text
 
-# Processing logic
+# ---- MAIN LOGIC ----
 if uploaded_file:
     file_name = uploaded_file.name.lower()
-    st.write(f"File uploaded: {file_name}")  # Debugging output
+    st.write(f"File uploaded: {file_name}")
 
     if file_name.endswith(".pdf"):
-        st.write("Processing PDF...")  # Debugging output
+        st.write("Processing PDF...")
         with st.spinner("Extracting text from PDF..."):
             text = extract_text_from_pdf(uploaded_file)
         st.success("✅ Text extracted from PDF.")
     else:
-        st.write("Processing Image...")  # Debugging output
+        st.write("Processing Image...")
         try:
             image = Image.open(uploaded_file)
-            st.image(image, caption=f'Uploaded Image: {file_name}', use_container_width=True)  # Small image container
-            
-            # Convert the image to bytes before passing to EasyOCR
+            st.image(image, caption=f'Uploaded Image: {file_name}', use_container_width=True)
+
             image_bytes = io.BytesIO()
             image.save(image_bytes, format='PNG')
             image_bytes = image_bytes.getvalue()
@@ -84,16 +88,15 @@ if uploaded_file:
                 text = "\n".join(result)
             st.success("✅ Text extracted from Image.")
         except Exception as e:
-            st.error(f"Error while processing image: {e}")
-            st.write(e)  # Print the error to the screen for debugging
+            st.error(f"❌ Error while processing image: {e}")
+            st.write(e)
 
-    # Display extracted text in scrollable area
+    # ---- DISPLAY EXTRACTED TEXT & SUMMARY ----
     if text.strip():
         st.markdown('<div class="summary-section">', unsafe_allow_html=True)
         st.subheader("📜 Extracted Text")
         st.text_area("", text, height=300, key="extracted_text", disabled=True, label_visibility="collapsed")
 
-        # Summarize button with custom style
         if st.button("📋 Fast Summarize", key="summarize_button", help="Generate summary from extracted text"):
             with st.spinner("Generating summary using extractive method..."):
                 summary_text = extractive_summary(text, num_sentences=10)
