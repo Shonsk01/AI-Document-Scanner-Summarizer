@@ -9,8 +9,11 @@ import nltk
 import io
 
 # Safe download of NLTK resources
-nltk.download('punkt', download_dir='/tmp/nltk_data')
-nltk.data.path.append('/tmp/nltk_data')
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', download_dir='/tmp/nltk_data')
+    nltk.data.path.append('/tmp/nltk_data')
 
 # Initialize OCR reader
 reader = easyocr.Reader(['en'])
@@ -32,7 +35,7 @@ st.markdown(
     """, unsafe_allow_html=True)
 
 # Title and introduction
-st.markdown('<h1 class="title">📄 Textify - by Shon Sudhir Kamble</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="title">📄 Textify - by Shon S</h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">AI-powered Document Extractor & Summarizer</p>', unsafe_allow_html=True)
 
 # File uploader
