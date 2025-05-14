@@ -14,6 +14,11 @@ try:
 except LookupError:
     nltk.download('punkt')
 
+try:
+    nltk.data.find('tokenizers/punkt_tab')
+except LookupError:
+    nltk.download('punkt_tab')
+
 # Initialize OCR reader
 reader = easyocr.Reader(['en'])
 
@@ -26,9 +31,9 @@ st.markdown(
         .title {font-size: 40px; color: #222831; font-weight: 700; margin-bottom: 5px;}
         .subtitle {font-size: 18px; color: #393E46; margin-top: 0px;}
         .section {padding: 20px 30px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
+        .upload-label {font-size: 16px; font-weight: 600; color: #30475E;}
         .stButton button {background-color: #30475E; color: #FFFFFF; font-weight: 600; border-radius: 8px;}
-        .custom-textarea {background-color: #f8f9fa; padding: 15px; border-radius: 10px; color: black; font-size: 14px; border: 1px solid #ddd;}
-        img.small-preview {border-radius: 8px; border: 1px solid #ddd; max-width: 250px; height: auto;}
+        .stTextArea textarea {border-radius: 10px; background-color: #f8f9fa; font-size: 14px;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -68,11 +73,7 @@ if uploaded_file:
     else:
         try:
             image = Image.open(uploaded_file)
-            st.markdown('<div class="section">', unsafe_allow_html=True)
-            st.markdown("#### 🖼 Uploaded Image Preview")
-            st.image(image, caption='Preview', width=250, use_container_width=False)
-            st.markdown('</div>', unsafe_allow_html=True)
-
+            # No display of uploaded image
             image_bytes = io.BytesIO()
             image.save(image_bytes, format='PNG')
             image_bytes = image_bytes.getvalue()
@@ -87,15 +88,14 @@ if uploaded_file:
     if text.strip():
         st.markdown('<div class="section">', unsafe_allow_html=True)
         st.subheader("📜 Extracted Text")
-        # Custom styled extracted text area using markdown + custom class
-        st.markdown(f'<div class="custom-textarea">{text.replace("\\n", "<br>")}</div>', unsafe_allow_html=True)
+        st.text_area("", text, height=300, key="extracted_text", disabled=True, label_visibility="collapsed")
 
         if st.button("📋 Generate Fast Summary", key="summarize_button"):
             with st.spinner("🕒 Generating summary..."):
                 summary_text = extractive_summary(text, num_sentences=10)
             st.success("✅ Summary Ready!")
             st.subheader("📝 Summary")
-            st.markdown(f'<div class="custom-textarea">{summary_text.replace("\\n", "<br>")}</div>', unsafe_allow_html=True)
+            st.text_area("", summary_text, height=300, key="summary_text", disabled=True, label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.warning("⚠ No text found to process.")
