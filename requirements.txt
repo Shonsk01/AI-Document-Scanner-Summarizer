@@ -1,7 +1,6 @@
 streamlit
-easyocr
+pytesseract
 PyMuPDF
 Pillow
 sumy
 nltk
-numpy
