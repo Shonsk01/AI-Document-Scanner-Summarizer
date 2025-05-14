@@ -17,7 +17,7 @@ except LookupError:
     nltk.download('punkt_tab')
 
 # Streamlit UI
-st.title("📄 Textify -by Shon Sudhir Kamble")
+st.title("📄 Textify")
 
 # File uploader (only PDF allowed)
 uploaded_file = st.file_uploader("Upload PDF", type=["pdf"])
