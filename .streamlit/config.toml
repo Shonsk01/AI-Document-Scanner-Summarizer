@@ -1,9 +1,1 @@
-[theme]
-base = "light"
 
-[server]
-headless = true
-
-[ui]
-hideSidebarNav = true
-hideToolbar = true
