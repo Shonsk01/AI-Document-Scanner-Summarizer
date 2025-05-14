@@ -39,8 +39,8 @@ st.markdown(
     """, unsafe_allow_html=True)
 
 # Title and introduction
-st.markdown('<h1 class="title">📄 Textify - by Shon Sudhir Kamble</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">AI-powered Document Extractor & Summarizer</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="title">📄 Textify -by Shon Sudhir Kamble.</h1>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">A.I.-powered image/pdf Extractor & Summarizer</p>', unsafe_allow_html=True)
 
 # File uploader
 st.markdown('<div class="upload-section">', unsafe_allow_html=True)
