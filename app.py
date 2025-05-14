@@ -71,4 +71,8 @@ if uploaded_file:
         if st.button("📋 Fast Summarize"):
             with st.spinner("Generating summary..."):
                 summary_text = extractive_summary(text)
-            st.success("✅ Summary R
+            st.success("✅ Summary Ready!")
+            st.subheader("Summary")
+            st.text_area("Summary", summary_text, height=300)
+    else:
+        st.warning("⚠ No text found to process.")
