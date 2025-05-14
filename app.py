@@ -27,23 +27,24 @@ st.set_page_config(page_title="Textify - AI Document Extractor & Summarizer", la
 st.markdown(
     """
     <style>
-        body {background-color: #f0f2f6;}
-        .title {font-size: 40px; color: #222831; font-weight: 700; margin-bottom: 5px;}
-        .subtitle {font-size: 18px; color: #393E46; margin-top: 0px;}
-        .section {padding: 20px 30px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
-        .upload-label {font-size: 16px; font-weight: 600; color: #30475E;}
-        .stButton button {background-color: #30475E; color: #FFFFFF; font-weight: 600; border-radius: 8px;}
-        .stTextArea textarea {border-radius: 10px; background-color: #f8f9fa; font-size: 14px;}
+        .main {background-color: #f8f9fa;}
+        .title {font-size: 36px; color: #1c1c1c; font-weight: bold;}
+        .subtitle {font-size: 20px; color: #007bff;}
+        .upload-section {padding: 30px; background-color: #ffffff; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);}
+        .summary-section {padding: 30px; background-color: #f1f8ff; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);}
+        .text-area {border-radius: 10px; background-color: #f8f9fa; font-size: 14px;}
+        .button {background-color: #007bff; color: white; font-weight: bold; border-radius: 5px; padding: 10px 20px; margin-top: 20px;}
+        .spinner {color: #007bff;}
     </style>
     """, unsafe_allow_html=True)
 
 # Title and introduction
-st.markdown('<h1 class="title">📄 Textify</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">AI-powered Document Extractor & Summarizer by Shon Sudhir Kamble</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="title">📄 Textify - by Shon Sudhir Kamble</h1>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">AI-powered Document Extractor & Summarizer</p>', unsafe_allow_html=True)
 
-# File uploader section
-st.markdown('<div class="section">', unsafe_allow_html=True)
-uploaded_file = st.file_uploader("📤 Upload your Image or PDF", type=["png", "jpg", "jpeg", "pdf"])
+# File uploader
+st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+uploaded_file = st.file_uploader("Upload Image or PDF", type=["png", "jpg", "jpeg", "pdf"])
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Extractive summarization using LexRank
@@ -64,34 +65,41 @@ def extract_text_from_pdf(pdf_file):
 # Processing logic
 if uploaded_file:
     file_name = uploaded_file.name.lower()
-    st.success(f"✅ File uploaded: {file_name}")
+    st.write(f"File uploaded: {file_name}")  # Debugging output
 
     if file_name.endswith(".pdf"):
-        with st.spinner("🕒 Extracting text from PDF..."):
+        st.write("Processing PDF...")  # Debugging output
+        with st.spinner("Extracting text from PDF..."):
             text = extract_text_from_pdf(uploaded_file)
         st.success("✅ Text extracted from PDF.")
     else:
+        st.write("Processing Image...")  # Debugging output
         try:
             image = Image.open(uploaded_file)
-            # No display of uploaded image
+            st.image(image, caption='Uploaded Image', use_container_width=True)
+            
+            # Convert the image to bytes before passing to EasyOCR
             image_bytes = io.BytesIO()
             image.save(image_bytes, format='PNG')
             image_bytes = image_bytes.getvalue()
 
-            with st.spinner("🕒 Extracting text from Image..."):
+            with st.spinner("Extracting text from Image..."):
                 result = reader.readtext(image_bytes, detail=0, paragraph=True)
                 text = "\n".join(result)
             st.success("✅ Text extracted from Image.")
         except Exception as e:
-            st.error(f"⚠ Error while processing image: {e}")
+            st.error(f"Error while processing image: {e}")
+            st.write(e)  # Print the error to the screen for debugging
 
+    # Display extracted text in scrollable area
     if text.strip():
-        st.markdown('<div class="section">', unsafe_allow_html=True)
+        st.markdown('<div class="summary-section">', unsafe_allow_html=True)
         st.subheader("📜 Extracted Text")
         st.text_area("", text, height=300, key="extracted_text", disabled=True, label_visibility="collapsed")
 
-        if st.button("📋 Generate Fast Summary", key="summarize_button"):
-            with st.spinner("🕒 Generating summary..."):
+        # Summarize button with custom style
+        if st.button("📋 Fast Summarize", key="summarize_button", help="Generate summary from extracted text"):
+            with st.spinner("Generating summary using extractive method..."):
                 summary_text = extractive_summary(text, num_sentences=10)
             st.success("✅ Summary Ready!")
             st.subheader("📝 Summary")
