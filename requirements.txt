@@ -1,6 +1,8 @@
-streamlit
-pytesseract
-PyMuPDF
-Pillow
-sumy
-nltk
+easyocr==1.5.1
+PyMuPDF==1.19.6
+pillow==11.2.1
+sumy==0.11.0
+nltk==3.9.1
+streamlit==1.45.1
+torch==2.7.0
+transformers==4.51.3
